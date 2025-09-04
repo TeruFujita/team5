@@ -2,102 +2,76 @@ import Image from "next/image";
 
 export default function Home() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <main>
+      <header className="site-header">
+        <div className="site-title">ロゴと名前考えましょ</div>
+        <nav className="site-nav">
+          <a>動画視聴</a>
+          <a>動画投稿</a>
+          <a>ログイン</a>
+          <a className="signup">サインアップ</a>
+        </nav>
+      </header>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      <section className="hero">
+        <div className="hero-oval">
+          <h1 className="hero-title">サービスの名前を考えましょう</h1>
+          <div className="hero-icons" aria-hidden>
+            <div className="icons-row">
+              <Image src="/774845fe643ab4ea7cdc8c83575873598c78732e.png" alt="icon1" width={120} height={120} />
+              <Image src="/40e6ebd4dddbca6e172ca97aeb877556f2fd4c47.png" alt="icon2" width={120} height={120} />
+              <Image src="/43a54de8e7466d2cf9bd2d6d54c1b651b275377b.png" alt="icon3" width={120} height={120} />
+              <Image src="/b64f7bef3ba41c1ee82d593059a243aec6f58fd6.png" alt="icon4" width={120} height={120} />
+            </div>
+            <div className="icons-row offset">
+              <Image src="/b3f8ad43ec466ecd514a53912e3ae458517e4065.png" alt="icon5" width={120} height={120} />
+              <Image src="/1290e1d2fbc59b74e513fa207e51e52b7064a3cb.png" alt="icon6" width={120} height={120} />
+              <Image src="/12b6e0c86c31b9e158aa93e3c2c402fc371162f1 (1).png" alt="icon7" width={120} height={120} />
+              <Image src="/099d87b0cdd4ddcb36d0a5850c5bf38746e73329.png" alt="icon8" width={120} height={120} />
+            </div>
+          </div>
+          <div className="hero-desc">
+            <h2 className="headline-under">○○とは？</h2>
+            <p>
+              後継者不足で失われていく技術・文化を守るための
+              動画視聴・配信のプラットフォームです。
+            </p>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      </section>
+
+      <section className="search">
+        <div className="search-box">
+          <input type="text" placeholder="" />
+          <button aria-label="search">🔍</button>
+        </div>
+      </section>
+
+      <section className="carousel">
+        <div className="cards">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <article key={i} className={`card ${i === 2 ? "active" : ""}`}>
+              <div className="thumb">
+                <Image
+                  src="/40e6ebd4dddbca6e172ca97aeb877556f2fd4c47.png"
+                  alt="thumb"
+                  width={320}
+                  height={200}
+                />
+              </div>
+              <div className="meta">
+                <h3>はじめしゃちょー結婚しました。</h3>
+                <p>はじめしゃちょー</p>
+              </div>
+            </article>
+          ))}
+        </div>
+        <div className="dots">
+          {[0, 1, 2, 3, 4].map((d) => (
+            <span key={d} className={`dot ${d === 2 ? "current" : ""}`} />
+          ))}
+        </div>
+      </section>
+    </main>
   );
 }
