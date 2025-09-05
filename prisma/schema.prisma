@@ -1,0 +1,106 @@
+// 伝統文化動画プラットフォーム - Prismaスキーマ
+// 日本の伝統文化・技術を守るための動画視聴・配信プラットフォーム
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ユーザーモデル
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // リレーション
+  videos    Video[]
+  comments  Comment[]
+  likes     Like[]
+
+  @@map("users")
+}
+
+// カテゴリモデル（伝統工芸の種類）
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  icon        String?  // アイコン画像のURL
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // リレーション
+  videos      Video[]
+
+  @@map("categories")
+}
+
+// 動画モデル
+model Video {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  thumbnail   String?  // サムネイル画像のURL
+  videoUrl    String   // 動画ファイルのURL
+  duration    Int?     // 動画の長さ（秒）
+  viewCount   Int      @default(0)
+  likeCount   Int      @default(0)
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 外部キー
+  userId      String
+  categoryId  String?
+
+  // リレーション
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category    Category? @relation(fields: [categoryId], references: [id])
+  comments    Comment[]
+  likes       Like[]
+
+  @@map("videos")
+}
+
+// コメントモデル
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 外部キー
+  userId    String
+  videoId   String
+
+  // リレーション
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video     Video   @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+// いいねモデル
+model Like {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  // 外部キー
+  userId    String
+  videoId   String
+
+  // リレーション
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video     Video   @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  // ユーザーと動画の組み合わせは一意
+  @@unique([userId, videoId])
+  @@map("likes")
+}
