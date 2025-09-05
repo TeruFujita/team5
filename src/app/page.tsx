@@ -6,10 +6,10 @@ export default function Home() {
       <header className="site-header">
         <div className="site-title">ロゴと名前考えましょ</div>
         <nav className="site-nav">
-          <a>動画視聴</a>
-          <a>動画投稿</a>
-          <a>ログイン</a>
-          <a className="signup">サインアップ</a>
+          <a href="/videos">動画視聴</a>
+          <a href="/upload">動画投稿</a>
+          <a href="/login">ログイン</a>
+          <a href="/signup" className="signup">サインアップ</a>
         </nav>
       </header>
 
