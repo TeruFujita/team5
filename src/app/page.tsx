@@ -23,7 +23,7 @@ export default function Home() {
               <Image src="/43a54de8e7466d2cf9bd2d6d54c1b651b275377b.png" alt="icon3" width={120} height={120} />
               <Image src="/b64f7bef3ba41c1ee82d593059a243aec6f58fd6.png" alt="icon4" width={120} height={120} />
             </div>
-            <div className="icons-row offset">
+            <div className="icons-row">
               <Image src="/b3f8ad43ec466ecd514a53912e3ae458517e4065.png" alt="icon5" width={120} height={120} />
               <Image src="/1290e1d2fbc59b74e513fa207e51e52b7064a3cb.png" alt="icon6" width={120} height={120} />
               <Image src="/12b6e0c86c31b9e158aa93e3c2c402fc371162f1 (1).png" alt="icon7" width={120} height={120} />
@@ -41,9 +41,12 @@ export default function Home() {
       </section>
 
       <section className="search">
-        <div className="search-box">
-          <input type="text" placeholder="" />
-          <button aria-label="search">🔍</button>
+        <div className="search-container">
+          <h3 className="trending-text">急上昇動画</h3>
+          <div className="search-box">
+            <input type="text" placeholder="探す" />
+            <button aria-label="search">🔍</button>
+          </div>
         </div>
       </section>
 
