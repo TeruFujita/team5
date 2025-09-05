@@ -68,11 +68,11 @@ main {
 .hero {
   display: flex;
   justify-content: center;
-  padding: 60px 20px 40px;
+  padding: 60px 0 40px;
 }
 
 .hero-oval {
-  width: min(1200px, 90%);
+  width: 100%;
   padding: 60px 40px 80px;
   background: #f5f0d8;
   border-radius: 50%/20%;
