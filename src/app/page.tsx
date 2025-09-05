@@ -38,14 +38,34 @@ export default function Home() {
             </p>
           </div>
         </div>
+        <div className="stats-container">
+          <div className="stat-box">
+            伝統工芸の分野では、<br />
+            60歳以上の職人が<br />
+            全体の70%以上を<br />
+            占めている
+          </div>
+          <div className="stat-box">
+            伝統工芸の道を目指す<br />
+            20代から30代の<br />
+            職人は全体の10%未満
+          </div>
+          <div className="stat-box">
+            伝統工芸の道を目指す<br />
+            20代から30代の<br />
+            職人は全体の10%未満
+          </div>
+        </div>
       </section>
 
       <section className="search">
-        <div className="search-container">
+        <div className="search-layout">
           <h3 className="trending-text">急上昇動画</h3>
           <div className="search-box">
-            <input type="text" placeholder="探す" />
-            <button aria-label="search">🔍</button>
+            <svg className="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5C2 5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <input type="text" placeholder="Search" />
           </div>
         </div>
       </section>
@@ -64,15 +84,29 @@ export default function Home() {
               </div>
               <div className="meta">
                 <h3>はじめしゃちょー結婚しました。</h3>
-                <p>はじめしゃちょー</p>
+                <div className="channel-info">
+                  <div className="channel-icon">
+                    <Image
+                      src="/40e6ebd4dddbca6e172ca97aeb877556f2fd4c47.png"
+                      alt="channel"
+                      width={24}
+                      height={24}
+                    />
+                  </div>
+                  <p>はじめしゃちょー</p>
+                </div>
               </div>
             </article>
           ))}
         </div>
-        <div className="dots">
-          {[0, 1, 2, 3, 4].map((d) => (
-            <span key={d} className={`dot ${d === 2 ? "current" : ""}`} />
-          ))}
+        <div className="carousel-controls">
+          <button className="arrow-btn left-arrow">‹</button>
+          <div className="dots">
+            {[0, 1, 2, 3, 4].map((d) => (
+              <span key={d} className={`dot ${d === 2 ? "current" : ""}`} />
+            ))}
+          </div>
+          <button className="arrow-btn right-arrow">›</button>
         </div>
       </section>
     </main>
