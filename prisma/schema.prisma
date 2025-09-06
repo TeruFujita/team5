@@ -10,7 +10,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ユーザーモデル
+// ユーザーモデル（Supabase Auth連携）
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -23,8 +23,29 @@ model User {
   videos    Video[]
   comments  Comment[]
   likes     Like[]
+  saves     Save[]
 
   @@map("users")
+}
+
+// プロフィールモデル（投稿者詳細）
+model Profile {
+  id         String   @id @default(cuid())
+  username   String   @unique
+  avatarUrl  String?  // アバター画像のURL
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // 外部キー（Auth usersテーブルと連携）
+  userId     String   @unique
+
+  // リレーション
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  videos     Video[]
+  comments   Comment[]
+  saves      Save[]
+
+  @@map("profiles")
 }
 
 // カテゴリモデル（伝統工芸の種類）
@@ -44,27 +65,28 @@ model Category {
 
 // 動画モデル
 model Video {
-  id          String   @id @default(cuid())
-  title       String
-  description String?
-  thumbnail   String?  // サムネイル画像のURL
-  videoUrl    String   // 動画ファイルのURL
-  duration    Int?     // 動画の長さ（秒）
-  viewCount   Int      @default(0)
-  likeCount   Int      @default(0)
-  isPublished Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(cuid())
+  title        String
+  description  String?
+  thumbnailUrl String?  // サムネイル画像のURL
+  videoUrl     String   // 動画ファイルのURL（Supabase Storage）
+  duration     Int?     // 動画の長さ（秒）
+  viewCount    Int      @default(0)
+  likeCount    Int      @default(0)
+  isPublished  Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // 外部キー
-  userId      String
-  categoryId  String?
+  userId       String
+  categoryId   String?
 
   // リレーション
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  category    Category? @relation(fields: [categoryId], references: [id])
-  comments    Comment[]
-  likes       Like[]
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category     Category? @relation(fields: [categoryId], references: [id])
+  comments     Comment[]
+  likes        Like[]
+  saves        Save[]
 
   @@map("videos")
 }
@@ -72,7 +94,7 @@ model Video {
 // コメントモデル
 model Comment {
   id        String   @id @default(cuid())
-  content   String
+  text      String   // コメント本文
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -103,4 +125,22 @@ model Like {
   // ユーザーと動画の組み合わせは一意
   @@unique([userId, videoId])
   @@map("likes")
+}
+
+// 保存済み動画モデル
+model Save {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  // 外部キー
+  userId    String
+  videoId   String
+
+  // リレーション
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video     Video   @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  // ユーザーと動画の組み合わせは一意
+  @@unique([userId, videoId])
+  @@map("saves")
 }

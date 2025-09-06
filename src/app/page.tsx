@@ -1,15 +1,45 @@
+"use client";
+
 import Image from "next/image";
+import { useState, useEffect, useRef } from "react";
 
 export default function Home() {
+  const [currentSlide, setCurrentSlide] = useState(2); // 真ん中のカード（インデックス2）を初期表示
+  const totalSlides = 5;
+  const cardsRef = useRef<HTMLDivElement>(null);
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % totalSlides);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
+  };
+
+  const goToSlide = (index: number) => {
+    setCurrentSlide(index);
+  };
+
+  // スクロール位置を制御
+  useEffect(() => {
+    if (cardsRef.current) {
+      const cardWidth = cardsRef.current.scrollWidth / totalSlides;
+      const scrollPosition = currentSlide * cardWidth;
+      cardsRef.current.scrollTo({
+        left: scrollPosition,
+        behavior: 'smooth'
+      });
+    }
+  }, [currentSlide, totalSlides]);
   return (
     <main>
       <header className="site-header">
         <div className="site-title">ロゴと名前考えましょ</div>
         <nav className="site-nav">
-          <a>動画視聴</a>
-          <a>動画投稿</a>
-          <a>ログイン</a>
-          <a className="signup">サインアップ</a>
+          <a href="/videos">動画視聴</a>
+          <a href="/upload">動画投稿</a>
+          <a href="/login">ログイン</a>
+          <a href="/signup" className="signup">サインアップ</a>
         </nav>
       </header>
 
@@ -52,8 +82,8 @@ export default function Home() {
           </div>
           <div className="stat-box">
             伝統工芸の道を目指す<br />
-            20代から30代の<br />
-            職人は全体の10%未満
+            かかわる事業所数は、<br />
+            過去20年間で約40%減少
           </div>
         </div>
       </section>
@@ -71,9 +101,9 @@ export default function Home() {
       </section>
 
       <section className="carousel">
-        <div className="cards">
+        <div className="cards" ref={cardsRef}>
           {Array.from({ length: 5 }).map((_, i) => (
-            <article key={i} className={`card ${i === 2 ? "active" : ""}`}>
+            <article key={i} className={`card ${i === currentSlide ? "active" : ""}`}>
               <div className="thumb">
                 <Image
                   src="/40e6ebd4dddbca6e172ca97aeb877556f2fd4c47.png"
@@ -100,13 +130,17 @@ export default function Home() {
           ))}
         </div>
         <div className="carousel-controls">
-          <button className="arrow-btn left-arrow">‹</button>
+          <button className="arrow-btn left-arrow" onClick={prevSlide}>‹</button>
           <div className="dots">
             {[0, 1, 2, 3, 4].map((d) => (
-              <span key={d} className={`dot ${d === 2 ? "current" : ""}`} />
+              <span 
+                key={d} 
+                className={`dot ${d === currentSlide ? "current" : ""}`}
+                onClick={() => goToSlide(d)}
+              />
             ))}
           </div>
-          <button className="arrow-btn right-arrow">›</button>
+          <button className="arrow-btn right-arrow" onClick={nextSlide}>›</button>
         </div>
       </section>
     </main>
