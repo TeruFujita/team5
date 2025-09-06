@@ -2,38 +2,75 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { getVideos, searchVideos, Video } from "@/lib/videos";
 
 export default function VideosPage() {
   const { user, signOut } = useAuth();
+  const [videos, setVideos] = useState<Video[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<Video[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
-  // サンプル動画データ
-  const sampleVideos = [
-    {
-      id: 1,
-      title: "はじめしゃちょー結婚しました。",
-      channel: "はじめしゃちょー",
-      thumbnail: "/40e6ebd4dddbca6e172ca97aeb877556f2fd4c47.png",
-      views: "1.2M",
-      duration: "15:30"
-    },
-    {
-      id: 2,
-      title: "伝統工芸：和傘の制作過程",
-      channel: "職人チャンネル",
-      thumbnail: "/774845fe643ab4ea7cdc8c83575873598c78732e.png",
-      views: "856K",
-      duration: "22:15"
-    },
-    {
-      id: 3,
-      title: "芸者の舞踊：古典芸能の美",
-      channel: "日本文化保存会",
-      thumbnail: "/40e6ebd4dddbca6e172ca97aeb877556f2fd4c47.png",
-      views: "432K",
-      duration: "18:45"
+  // 動画データを取得
+  useEffect(() => {
+    const fetchVideos = async () => {
+      try {
+        setLoading(true);
+        const videoData = await getVideos();
+        setVideos(videoData);
+      } catch (error) {
+        console.error('Error fetching videos:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVideos();
+  }, []);
+
+  // 検索処理
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
     }
-  ];
+
+    try {
+      setIsSearching(true);
+      const results = await searchVideos(searchQuery);
+      setSearchResults(results);
+    } catch (error) {
+      console.error('Error searching videos:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // 表示する動画リストを決定
+  const displayVideos = isSearching ? searchResults : videos;
+
+  // 視聴回数をフォーマット
+  const formatViewCount = (count: number): string => {
+    if (count >= 1000000) {
+      return `${(count / 1000000).toFixed(1)}M`;
+    } else if (count >= 1000) {
+      return `${(count / 1000).toFixed(1)}K`;
+    }
+    return count.toString();
+  };
+
+  // 時間をフォーマット
+  const formatDuration = (seconds: number | null): string => {
+    if (!seconds) return "0:00";
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
 
   return (
     <main className="min-h-screen bg-[#a70808]">
@@ -91,9 +128,11 @@ export default function VideosPage() {
 
         {/* 検索バー */}
         <div className="mb-8">
-          <div className="relative max-w-md">
+          <form onSubmit={handleSearch} className="relative max-w-md">
             <input
               type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="動画を検索..."
               className="w-full px-4 py-3 pl-10 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#b40808] focus:border-transparent outline-none"
             />
@@ -102,39 +141,86 @@ export default function VideosPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
-          </div>
+            <button
+              type="submit"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+            >
+              <svg className="h-5 w-5 text-gray-400 hover:text-[#b40808]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
+          </form>
         </div>
 
-        {/* 動画グリッド */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {sampleVideos.map((video) => (
+        {/* ローディング状態 */}
+        {loading && (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+            <span className="ml-3 text-white">動画を読み込み中...</span>
+          </div>
+        )}
+
+        {/* 検索結果がない場合 */}
+        {!loading && isSearching && searchResults.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-white/80 text-lg">「{searchQuery}」の検索結果が見つかりませんでした</p>
+          </div>
+        )}
+
+        {/* 動画がない場合 */}
+        {!loading && !isSearching && videos.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-white/80 text-lg">まだ動画が投稿されていません</p>
             <Link 
-              key={video.id} 
-              href={`/videos/${video.id}`}
-              className="bg-[#f5f0d8] rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow block"
+              href="/upload" 
+              className="inline-block mt-4 bg-[#b40808] text-white px-6 py-3 rounded-lg hover:bg-[#a00808] transition-colors"
             >
-              <div className="relative">
-                <Image
-                  src={video.thumbnail}
-                  alt={video.title}
-                  width={400}
-                  height={225}
-                  className="w-full h-48 object-cover"
-                />
-                <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-sm px-2 py-1 rounded">
-                  {video.duration}
-                </div>
-              </div>
-              <div className="p-4">
-                <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-                  {video.title}
-                </h3>
-                <p className="text-gray-600 text-sm mb-2">{video.channel}</p>
-                <p className="text-gray-500 text-sm">{video.views} 回視聴</p>
-              </div>
+              最初の動画を投稿する
             </Link>
-          ))}
-        </div>
+          </div>
+        )}
+
+        {/* 動画グリッド */}
+        {!loading && displayVideos.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {displayVideos.map((video) => (
+              <Link 
+                key={video.id} 
+                href={`/videos/${video.id}`}
+                className="bg-[#f5f0d8] rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow block"
+              >
+                <div className="relative">
+                  <Image
+                    src={video.thumbnail_url || "/placeholder-video.jpg"}
+                    alt={video.title}
+                    width={400}
+                    height={225}
+                    className="w-full h-48 object-cover"
+                  />
+                  <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-sm px-2 py-1 rounded">
+                    {formatDuration(video.duration)}
+                  </div>
+                </div>
+                <div className="p-4">
+                  <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
+                    {video.title}
+                  </h3>
+                  <p className="text-gray-600 text-sm mb-2">
+                    {video.user?.name || "匿名ユーザー"}
+                  </p>
+                  <p className="text-gray-500 text-sm">
+                    {formatViewCount(video.view_count)} 回視聴
+                  </p>
+                  {video.category && (
+                    <span className="inline-block mt-2 px-2 py-1 bg-[#b40808] text-white text-xs rounded">
+                      {video.category.name}
+                    </span>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
 
         {/* もっと見るボタン */}
         <div className="text-center mt-8">

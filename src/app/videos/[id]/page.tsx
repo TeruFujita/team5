@@ -2,78 +2,83 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { getVideoById, incrementViewCount, VideoWithDetails } from "@/lib/videos";
+import { toggleLike, toggleSave, addComment, getUserLikeStatus, getUserSaveStatus } from "@/lib/interactions";
 
 export default function VideoDetailPage() {
   const { user, signOut } = useAuth();
   const params = useParams();
-  const videoId = params.id;
+  const videoId = params.id as string;
+  
+  const [video, setVideo] = useState<VideoWithDetails | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>("");
   
   const [isLiked, setIsLiked] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [comment, setComment] = useState("");
-  const [comments, setComments] = useState([
-    {
-      id: 1,
-      user: "職人ファン",
-      text: "素晴らしい技術ですね！勉強になります。",
-      time: "2時間前"
-    },
-    {
-      id: 2,
-      user: "伝統文化愛好家",
-      text: "このような技術が失われていくのは悲しいです。",
-      time: "5時間前"
+  const [isInteracting, setIsInteracting] = useState(false);
+
+  // 動画データを取得
+  useEffect(() => {
+    const fetchVideo = async () => {
+      try {
+        setLoading(true);
+        const videoData = await getVideoById(videoId);
+        
+        if (!videoData) {
+          setError("動画が見つかりません");
+          return;
+        }
+        
+        setVideo(videoData);
+        
+        // 視聴回数を増加
+        await incrementViewCount(videoId);
+
+        // ユーザーのいいね・保存状態を取得
+        if (user) {
+          const [likeStatus, saveStatus] = await Promise.all([
+            getUserLikeStatus(videoId, user.id),
+            getUserSaveStatus(videoId, user.id)
+          ]);
+          setIsLiked(likeStatus);
+          setIsSaved(saveStatus);
+        }
+      } catch (error) {
+        console.error('Error fetching video:', error);
+        setError("動画の読み込みに失敗しました");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (videoId) {
+      fetchVideo();
     }
-  ]);
+  }, [videoId]);
 
-  // サンプル動画データ（実際の実装ではAPIから取得）
-  const sampleVideos = [
-    {
-      id: 1,
-      title: "はじめしゃちょー結婚しました。",
-      channel: "はじめしゃちょー",
-      thumbnail: "/40e6ebd4dddbca6e172ca97aeb877556f2fd4c47.png",
-      views: "1.2M",
-      duration: "15:30",
-      description: "日本の伝統的な技術と文化を守り、次世代に伝えるための動画です。職人さんの丁寧な作業工程を間近で見ることができます。",
-      likes: 89,
-      comments: 12
-    },
-    {
-      id: 2,
-      title: "伝統工芸：和傘の制作過程",
-      channel: "職人チャンネル",
-      thumbnail: "/774845fe643ab4ea7cdc8c83575873598c78732e.png",
-      views: "856K",
-      duration: "22:15",
-      description: "京都の老舗和傘職人が、一本一本手作業で和傘を作る工程を詳しく紹介します。",
-      likes: 156,
-      comments: 8
-    },
-    {
-      id: 3,
-      title: "芸者の舞踊：古典芸能の美",
-      channel: "日本文化保存会",
-      thumbnail: "/40e6ebd4dddbca6e172ca97aeb877556f2fd4c47.png",
-      views: "432K",
-      duration: "18:45",
-      description: "京都の芸者が披露する古典舞踊の美しさを堪能できる動画です。",
-      likes: 67,
-      comments: 5
-    }
-  ];
-
-  // 動画IDに基づいて動画データを取得
-  const video = sampleVideos.find(v => v.id === parseInt(videoId as string));
-
-  if (!video) {
+  // ローディング状態
+  if (loading) {
     return (
       <main className="min-h-screen bg-[#a70808] flex items-center justify-center">
         <div className="text-center text-white">
-          <h1 className="text-2xl font-bold mb-4">動画が見つかりません</h1>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p>動画を読み込み中...</p>
+        </div>
+      </main>
+    );
+  }
+
+  // エラー状態
+  if (error || !video) {
+    return (
+      <main className="min-h-screen bg-[#a70808] flex items-center justify-center">
+        <div className="text-center text-white">
+          <h1 className="text-2xl font-bold mb-4">{error || "動画が見つかりません"}</h1>
           <Link href="/videos" className="text-[#f5f0d8] hover:underline">
             動画一覧に戻る
           </Link>
@@ -158,16 +163,15 @@ export default function VideoDetailPage() {
           <div className="lg:col-span-2 space-y-6">
             {/* 動画プレイヤー */}
             <div className="relative bg-black rounded-lg overflow-hidden">
-              <div className="aspect-video flex items-center justify-center">
-                <div className="text-center text-white">
-                  <div className="w-20 h-20 mx-auto mb-4 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                    <svg className="w-8 h-8 ml-1" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z"/>
-                    </svg>
-                  </div>
-                  <p className="text-lg">動画プレイヤー</p>
-                  <p className="text-sm text-gray-300">実際の動画がここに表示されます</p>
-                </div>
+              <div className="aspect-video">
+                <video
+                  controls
+                  className="w-full h-full"
+                  poster={video.thumbnail_url || undefined}
+                >
+                  <source src={video.video_url} type="video/mp4" />
+                  お使いのブラウザは動画の再生をサポートしていません。
+                </video>
               </div>
             </div>
 
@@ -187,7 +191,7 @@ export default function VideoDetailPage() {
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                       </svg>
-                      <span>{video.likes}</span>
+                      <span>{video.like_count}</span>
                     </button>
                     <button
                       onClick={handleSave}
@@ -205,30 +209,59 @@ export default function VideoDetailPage() {
                   </div>
                 </div>
                 <div className="text-sm text-white">
-                  {video.views} 回視聴 • {video.duration}
+                  {video.view_count.toLocaleString()} 回視聴 • {video.created_at ? new Date(video.created_at).toLocaleDateString('ja-JP') : ''}
                 </div>
               </div>
 
               {/* チャンネル情報 */}
               <div className="flex items-center space-x-4 p-4 bg-[#f5f0d8] rounded-lg">
                 <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
-                  <span className="text-gray-600 font-bold">{video.channel.charAt(0)}</span>
+                  {video.user?.avatar ? (
+                    <Image
+                      src={video.user.avatar}
+                      alt={video.user.name || "ユーザー"}
+                      width={48}
+                      height={48}
+                      className="w-12 h-12 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-gray-600 font-bold">
+                      {(video.user?.name || "U").charAt(0).toUpperCase()}
+                    </span>
+                  )}
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">{video.channel}</h3>
-                  <p className="text-sm text-gray-600">職人チャンネル</p>
+                  <h3 className="font-semibold text-gray-900">{video.user?.name || "匿名ユーザー"}</h3>
+                  <p className="text-sm text-gray-600">投稿者</p>
                 </div>
-                <button className="ml-auto bg-[#b40808] text-white px-4 py-2 rounded-lg hover:bg-[#a00808] transition-colors">
-                  フォロー
-                </button>
+                {user && user.id !== video.user_id && (
+                  <button className="ml-auto bg-[#b40808] text-white px-4 py-2 rounded-lg hover:bg-[#a00808] transition-colors">
+                    フォロー
+                  </button>
+                )}
               </div>
 
               {/* 説明 */}
               <div className="bg-[#f5f0d8] rounded-lg p-4">
                 <h4 className="font-semibold mb-2">説明</h4>
                 <p className="text-gray-700">
-                  {video.description}
+                  {video.description || "説明はありません"}
                 </p>
+                {video.tags && video.tags.length > 0 && (
+                  <div className="mt-4">
+                    <h5 className="font-medium mb-2">タグ</h5>
+                    <div className="flex flex-wrap gap-2">
+                      {video.tags.map((tag) => (
+                        <span
+                          key={tag.id}
+                          className="px-2 py-1 bg-gray-200 text-gray-700 text-sm rounded"
+                        >
+                          #{tag.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -237,43 +270,69 @@ export default function VideoDetailPage() {
           <div className="space-y-6">
             {/* コメント欄 */}
             <div className="bg-[#f5f0d8] rounded-lg p-4">
-              <h4 className="font-semibold mb-4">コメント ({comments.length})</h4>
+              <h4 className="font-semibold mb-4">コメント ({video.comments?.length || 0})</h4>
               
               {/* コメント投稿フォーム */}
-              <form onSubmit={handleCommentSubmit} className="mb-4">
-                <div className="flex space-x-2">
-                  <input
-                    type="text"
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    placeholder="コメントを入力..."
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#b40808] focus:border-transparent outline-none"
-                  />
-                  <button
-                    type="submit"
-                    className="bg-[#b40808] text-white px-4 py-2 rounded-lg hover:bg-[#a00808] transition-colors"
-                  >
-                    投稿
-                  </button>
+              {user && (
+                <form onSubmit={handleCommentSubmit} className="mb-4">
+                  <div className="flex space-x-2">
+                    <input
+                      type="text"
+                      value={comment}
+                      onChange={(e) => setComment(e.target.value)}
+                      placeholder="コメントを入力..."
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#b40808] focus:border-transparent outline-none"
+                    />
+                    <button
+                      type="submit"
+                      className="bg-[#b40808] text-white px-4 py-2 rounded-lg hover:bg-[#a00808] transition-colors"
+                    >
+                      投稿
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {!user && (
+                <div className="mb-4 p-3 bg-gray-100 rounded-lg text-center">
+                  <p className="text-gray-600 text-sm">コメントするには<Link href="/login" className="text-[#b40808] hover:underline">ログイン</Link>してください</p>
                 </div>
-              </form>
+              )}
 
               {/* コメント一覧 */}
               <div className="space-y-4 max-h-64 overflow-y-auto">
-                {comments.map((comment) => (
-                  <div key={comment.id} className="flex space-x-3">
-                    <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-gray-600 text-sm font-bold">{comment.user.charAt(0)}</span>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <span className="font-semibold text-sm">{comment.user}</span>
-                        <span className="text-xs text-gray-500">{comment.time}</span>
+                {video.comments && video.comments.length > 0 ? (
+                  video.comments.map((comment) => (
+                    <div key={comment.id} className="flex space-x-3">
+                      <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+                        {comment.user?.avatar ? (
+                          <Image
+                            src={comment.user.avatar}
+                            alt={comment.user.name || "ユーザー"}
+                            width={32}
+                            height={32}
+                            className="w-8 h-8 rounded-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-gray-600 text-sm font-bold">
+                            {(comment.user?.name || "U").charAt(0).toUpperCase()}
+                          </span>
+                        )}
                       </div>
-                      <p className="text-sm text-gray-700">{comment.text}</p>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <span className="font-semibold text-sm">{comment.user?.name || "匿名ユーザー"}</span>
+                          <span className="text-xs text-gray-500">
+                            {new Date(comment.created_at).toLocaleDateString('ja-JP')}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-700">{comment.text}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-gray-500 text-sm text-center py-4">まだコメントがありません</p>
+                )}
               </div>
             </div>
 

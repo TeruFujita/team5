@@ -4,12 +4,26 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { uploadVideo, uploadThumbnail, saveVideoToDatabase, VideoUploadData } from "@/lib/upload";
+import { useRouter } from "next/navigation";
 
 export default function UploadPage() {
   const { user, signOut } = useAuth();
+  const router = useRouter();
   const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
   const [selectedThumbnail, setSelectedThumbnail] = useState<File | null>(null);
   const [uploadError, setUploadError] = useState<string>("");
+  const [uploadSuccess, setUploadSuccess] = useState<string>("");
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  
+  // フォームデータ
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    category: "",
+    tags: ""
+  });
 
   // 認証チェック
   if (!user) {
@@ -82,6 +96,90 @@ export default function UploadPage() {
       setUploadError("");
     }
   };
+
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!selectedVideo) {
+      setUploadError("動画ファイルを選択してください");
+      return;
+    }
+
+    if (!formData.title.trim()) {
+      setUploadError("タイトルを入力してください");
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadError("");
+    setUploadSuccess("");
+    setUploadProgress(0);
+
+    try {
+      if (!user) {
+        throw new Error("ユーザーが認証されていません");
+      }
+
+      // 1. 動画ファイルをアップロード
+      setUploadProgress(10);
+      const videoResult = await uploadVideo(selectedVideo, user.id);
+      if (!videoResult.success) {
+        throw new Error(videoResult.error || "動画のアップロードに失敗しました");
+      }
+
+      // 2. サムネイル画像をアップロード（選択されている場合）
+      setUploadProgress(50);
+      let thumbnailUrl = "";
+      if (selectedThumbnail) {
+        const thumbnailResult = await uploadThumbnail(selectedThumbnail, user.id);
+        if (!thumbnailResult.success) {
+          throw new Error(thumbnailResult.error || "サムネイルのアップロードに失敗しました");
+        }
+        thumbnailUrl = thumbnailResult.url || "";
+      }
+
+      // 3. データベースに動画情報を保存
+      setUploadProgress(80);
+      const videoData: VideoUploadData = {
+        title: formData.title,
+        description: formData.description,
+        category: formData.category,
+        tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
+      };
+
+      const saveResult = await saveVideoToDatabase(
+        videoData,
+        videoResult.url!,
+        thumbnailUrl,
+        user.id
+      );
+
+      if (!saveResult.success) {
+        throw new Error(saveResult.error || "データベースへの保存に失敗しました");
+      }
+
+      setUploadProgress(100);
+      setUploadSuccess("動画のアップロードが完了しました！");
+      
+      // 3秒後に動画一覧ページにリダイレクト
+      setTimeout(() => {
+        router.push("/videos");
+      }, 3000);
+
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : "アップロードに失敗しました");
+    } finally {
+      setIsUploading(false);
+    }
+  };
   return (
     <main className="min-h-screen bg-[#a70808]">
       {/* ヘッダー */}
@@ -137,7 +235,33 @@ export default function UploadPage() {
             <p className="text-gray-600">日本の伝統文化・技術を共有しましょう</p>
           </div>
 
-          <form className="space-y-6">
+          {uploadError && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+              {uploadError}
+            </div>
+          )}
+
+          {uploadSuccess && (
+            <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+              {uploadSuccess}
+            </div>
+          )}
+
+          {isUploading && (
+            <div className="mb-4 p-3 bg-blue-100 border border-blue-400 text-blue-700 rounded">
+              <div className="flex items-center justify-between">
+                <span>アップロード中... {Math.round(uploadProgress)}%</span>
+                <div className="w-32 bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* 動画ファイルアップロード */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -199,12 +323,6 @@ export default function UploadPage() {
               </div>
             </div>
 
-            {/* エラーメッセージ */}
-            {uploadError && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                {uploadError}
-              </div>
-            )}
 
             {/* 選択されたファイルの表示 */}
             {selectedVideo && (
@@ -229,8 +347,12 @@ export default function UploadPage() {
               <input
                 type="text"
                 id="title"
+                name="title"
+                value={formData.title}
+                onChange={handleFormChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#b40808] focus:border-transparent outline-none"
                 placeholder="動画のタイトルを入力してください"
+                required
               />
             </div>
 
@@ -241,6 +363,9 @@ export default function UploadPage() {
               </label>
               <textarea
                 id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleFormChange}
                 rows={4}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#b40808] focus:border-transparent outline-none"
                 placeholder="動画の内容や伝統文化について説明してください"
@@ -254,6 +379,9 @@ export default function UploadPage() {
               </label>
               <select
                 id="category"
+                name="category"
+                value={formData.category}
+                onChange={handleFormChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#b40808] focus:border-transparent outline-none"
               >
                 <option value="">カテゴリを選択してください</option>
@@ -274,6 +402,9 @@ export default function UploadPage() {
               <input
                 type="text"
                 id="tags"
+                name="tags"
+                value={formData.tags}
+                onChange={handleFormChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#b40808] focus:border-transparent outline-none"
                 placeholder="例: 和傘, 職人, 京都, 伝統工芸"
               />
@@ -304,9 +435,10 @@ export default function UploadPage() {
             <div className="flex space-x-4">
               <button
                 type="submit"
-                className="flex-1 bg-[#b40808] text-white py-3 rounded-lg font-medium hover:bg-[#a00808] transition-colors"
+                disabled={isUploading}
+                className="flex-1 bg-[#b40808] text-white py-3 rounded-lg font-medium hover:bg-[#a00808] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                動画を投稿
+                {isUploading ? "アップロード中..." : "動画を投稿"}
               </button>
               <button
                 type="button"
