@@ -34,18 +34,38 @@ export default function Home() {
   return (
     <main>
       <header className="site-header">
-        <div className="site-title">ロゴと名前考えましょ</div>
-        <nav className="site-nav">
-          <a href="/videos">動画視聴</a>
-          <a href="/upload">動画投稿</a>
-          <a href="/login">ログイン</a>
-          <a href="/signup" className="signup">サインアップ</a>
+        <Image 
+          src="/結継.png" 
+          alt="結継" 
+          width={200} 
+          height={60} 
+          className="site-title-image"
+        />
+        <nav className="flex items-center space-x-8">
+          <a href="/videos" className="text-gray-700 hover:text-[#b40808] font-medium py-2">
+            動画視聴
+          </a>
+          <a href="/upload" className="text-gray-700 hover:text-[#b40808] font-medium py-2">
+            動画投稿
+          </a>
+          <a href="/login" className="text-gray-700 hover:text-[#b40808] font-medium py-2">
+            ログイン
+          </a>
+          <a href="/signup" className="bg-[#b40808] text-white px-4 py-2 rounded-lg hover:bg-[#a00808] transition-colors font-medium">
+            サインアップ
+          </a>
         </nav>
       </header>
 
       <section className="hero">
         <div className="hero-oval">
-          <h1 className="hero-title">サービスの名前を考えましょう</h1>
+          <Image 
+            src="/結継.png" 
+            alt="結継" 
+            width={200} 
+            height={80} 
+            className="hero-title-image"
+          />
           <div className="hero-icons" aria-hidden>
             <div className="icons-row">
               <Image src="/774845fe643ab4ea7cdc8c83575873598c78732e.png" alt="icon1" width={120} height={120} />
@@ -61,7 +81,7 @@ export default function Home() {
             </div>
           </div>
           <div className="hero-desc">
-            <h2 className="headline-under">○○とは？</h2>
+            <h2 className="headline-under">結継とは？</h2>
             <p>
               後継者不足で失われていく技術・文化を守るための
               動画視聴・配信のプラットフォームです。

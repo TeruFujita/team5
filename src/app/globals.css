@@ -37,10 +37,11 @@ main {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 20px;
+  padding: 20px 30px;
   background: #f5f0d8;
   border-bottom: 1px solid rgba(0,0,0,0.1);
   z-index: 100;
+  min-height: 80px;
 }
 
 .site-title {
@@ -48,20 +49,11 @@ main {
   font-size: 16px;
 }
 
-.site-nav {
-  display: flex;
-  gap: 20px;
-  font-size: 14px;
+.site-title-image {
+  height: 60px;
+  width: auto;
 }
 
-.site-nav a {
-  text-decoration: none;
-  color: inherit;
-}
-
-.site-nav a.signup {
-  opacity: 0.9;
-}
 
 /* ヒーローセクション */
 .hero {
@@ -74,7 +66,7 @@ main {
 .hero-oval {
   width: 100%;
   padding: 60px 40px 80px;
-  background: #f5f0d8;
+  background: #fffAE2;
   border-radius: 50%/20%;
   text-align: center;
   box-shadow: 0 4px 20px rgba(0,0,0,0.1);
@@ -86,6 +78,13 @@ main {
   letter-spacing: 3px;
   margin-bottom: 40px;
   font-weight: bold;
+}
+
+.hero-title-image {
+  margin: 0 auto 40px auto;
+  max-width: 100%;
+  height: auto;
+  display: block;
 }
 
 /* アイコン配置 */
@@ -365,3 +364,4 @@ main {
   height: 16px;
   background: #a70808;
 }
+

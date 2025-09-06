@@ -1,15 +1,73 @@
+"use client";
+
 import Link from "next/link";
+import Image from "next/image";
+import { useState } from "react";
 
 export default function UploadPage() {
+  const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
+  const [selectedThumbnail, setSelectedThumbnail] = useState<File | null>(null);
+  const [uploadError, setUploadError] = useState<string>("");
+
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // ファイルサイズチェック（50MB = 50 * 1024 * 1024 bytes）
+      if (file.size > 50 * 1024 * 1024) {
+        setUploadError("動画ファイルは50MB以下にしてください");
+        setSelectedVideo(null);
+        return;
+      }
+      
+      // ファイル形式チェック
+      const allowedTypes = ['video/mp4', 'video/mov', 'video/avi', 'video/webm'];
+      if (!allowedTypes.includes(file.type)) {
+        setUploadError("MP4, MOV, AVI, WebM形式のファイルのみアップロード可能です");
+        setSelectedVideo(null);
+        return;
+      }
+      
+      setSelectedVideo(file);
+      setUploadError("");
+    }
+  };
+
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // ファイルサイズチェック（5MB = 5 * 1024 * 1024 bytes）
+      if (file.size > 5 * 1024 * 1024) {
+        setUploadError("サムネイル画像は5MB以下にしてください");
+        setSelectedThumbnail(null);
+        return;
+      }
+      
+      // ファイル形式チェック
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        setUploadError("JPG, PNG, WebP形式の画像のみアップロード可能です");
+        setSelectedThumbnail(null);
+        return;
+      }
+      
+      setSelectedThumbnail(file);
+      setUploadError("");
+    }
+  };
   return (
     <main className="min-h-screen bg-[#a70808]">
       {/* ヘッダー */}
-      <header className="bg-[#f5f0d8] sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/" className="text-xl font-bold text-[#b40808]">
-              伝統文化プラットフォーム
-            </Link>
+      <header className="bg-[#f5f0d8] sticky top-0 z-50" style={{ padding: '20px 30px', minHeight: '80px' }}>
+        <div className="flex justify-between items-center">
+          <Link href="/" className="flex items-center">
+            <Image 
+              src="/結継.png" 
+              alt="結継" 
+              width={200} 
+              height={60} 
+              style={{ height: '60px', width: 'auto' }}
+            />
+          </Link>
             <nav className="flex items-center space-x-8">
               <Link href="/videos" className="text-gray-700 hover:text-[#b40808] font-medium py-2">
                 動画視聴
@@ -24,7 +82,6 @@ export default function UploadPage() {
                 サインアップ
               </Link>
             </nav>
-          </div>
         </div>
       </header>
 
@@ -59,12 +116,13 @@ export default function UploadPage() {
                       name="video-upload"
                       type="file"
                       accept="video/*"
+                      onChange={handleVideoChange}
                       className="sr-only"
                     />
                   </label>
                 </div>
                 <p className="mt-2 text-xs text-gray-500">
-                  MP4, MOV, AVI形式、最大500MB
+                  MP4, MOV, AVI形式、最大50MB
                 </p>
               </div>
             </div>
@@ -86,15 +144,38 @@ export default function UploadPage() {
                       name="thumbnail-upload"
                       type="file"
                       accept="image/*"
+                      onChange={handleThumbnailChange}
                       className="sr-only"
                     />
                   </label>
                 </div>
                 <p className="mt-1 text-xs text-gray-500">
-                  JPG, PNG形式、推奨サイズ: 1280x720px
+                  JPG, PNG形式、最大5MB、推奨サイズ: 1280x720px
                 </p>
               </div>
             </div>
+
+            {/* エラーメッセージ */}
+            {uploadError && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                {uploadError}
+              </div>
+            )}
+
+            {/* 選択されたファイルの表示 */}
+            {selectedVideo && (
+              <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+                <p>選択された動画: {selectedVideo.name}</p>
+                <p className="text-sm">サイズ: {(selectedVideo.size / (1024 * 1024)).toFixed(2)}MB</p>
+              </div>
+            )}
+
+            {selectedThumbnail && (
+              <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+                <p>選択されたサムネイル: {selectedThumbnail.name}</p>
+                <p className="text-sm">サイズ: {(selectedThumbnail.size / (1024 * 1024)).toFixed(2)}MB</p>
+              </div>
+            )}
 
             {/* タイトル */}
             <div>

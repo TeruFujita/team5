@@ -87,6 +87,7 @@ model Video {
   comments     Comment[]
   likes        Like[]
   saves        Save[]
+  videoTags    VideoTag[]
 
   @@map("videos")
 }
@@ -113,6 +114,7 @@ model Comment {
 model Like {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // 外部キー
   userId    String
@@ -131,6 +133,7 @@ model Like {
 model Save {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // 外部キー
   userId    String
@@ -143,4 +146,35 @@ model Save {
   // ユーザーと動画の組み合わせは一意
   @@unique([userId, videoId])
   @@map("saves")
+}
+
+// タグモデル
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // リレーション
+  videoTags VideoTag[]
+
+  @@map("tags")
+}
+
+// 動画とタグの中間テーブル
+model VideoTag {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  // 外部キー
+  videoId   String
+  tagId     String
+
+  // リレーション
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  // 動画とタグの組み合わせは一意
+  @@unique([videoId, tagId])
+  @@map("video_tags")
 }

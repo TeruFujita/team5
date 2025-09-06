@@ -138,18 +138,44 @@ export type Database = {
         Row: {
           id: string
           created_at: string
+          updated_at: string
           user_id: string
           video_id: string
         }
         Insert: {
           id?: string
           created_at?: string
+          updated_at?: string
           user_id: string
           video_id: string
         }
         Update: {
           id?: string
           created_at?: string
+          updated_at?: string
+          user_id?: string
+          video_id?: string
+        }
+      }
+      likes: {
+        Row: {
+          id: string
+          created_at: string
+          updated_at: string
+          user_id: string
+          video_id: string
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          user_id: string
+          video_id: string
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          updated_at?: string
           user_id?: string
           video_id?: string
         }
@@ -178,6 +204,46 @@ export type Database = {
           icon?: string | null
           created_at?: string
           updated_at?: string
+        }
+      }
+      tags: {
+        Row: {
+          id: string
+          name: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      video_tags: {
+        Row: {
+          id: string
+          created_at: string
+          video_id: string
+          tag_id: string
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          video_id: string
+          tag_id: string
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          video_id?: string
+          tag_id?: string
         }
       }
     }

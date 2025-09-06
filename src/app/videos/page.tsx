@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 
 export default function VideosPage() {
+
   // サンプル動画データ
   const sampleVideos = [
     {
@@ -33,12 +34,17 @@ export default function VideosPage() {
   return (
     <main className="min-h-screen bg-[#a70808]">
       {/* ヘッダー */}
-      <header className="bg-[#f5f0d8] sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/" className="text-xl font-bold text-[#b40808]">
-              伝統文化プラットフォーム
-            </Link>
+      <header className="bg-[#f5f0d8] sticky top-0 z-50" style={{ padding: '20px 30px', minHeight: '80px' }}>
+        <div className="flex justify-between items-center">
+          <Link href="/" className="flex items-center">
+            <Image 
+              src="/結継.png" 
+              alt="結継" 
+              width={200} 
+              height={60} 
+              style={{ height: '60px', width: 'auto' }}
+            />
+          </Link>
             <nav className="flex items-center space-x-8">
               <Link href="/videos" className="text-gray-700 hover:text-[#b40808] font-medium py-2">
                 動画視聴
@@ -53,7 +59,6 @@ export default function VideosPage() {
                 サインアップ
               </Link>
             </nav>
-          </div>
         </div>
       </header>
 
@@ -83,7 +88,11 @@ export default function VideosPage() {
         {/* 動画グリッド */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {sampleVideos.map((video) => (
-            <div key={video.id} className="bg-[#f5f0d8] rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+            <Link 
+              key={video.id} 
+              href={`/videos/${video.id}`}
+              className="bg-[#f5f0d8] rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow block"
+            >
               <div className="relative">
                 <Image
                   src={video.thumbnail}
@@ -103,7 +112,7 @@ export default function VideosPage() {
                 <p className="text-gray-600 text-sm mb-2">{video.channel}</p>
                 <p className="text-gray-500 text-sm">{video.views} 回視聴</p>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 
