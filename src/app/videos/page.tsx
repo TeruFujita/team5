@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { getVideos, searchVideos, Video } from "@/lib/videos";
+import { getVideos, searchVideos, getCategories, getPopularVideos, getTrendingVideos, Video, Category } from "@/lib/videos";
 
 export default function VideosPage() {
   const { user, signOut } = useAuth();
@@ -13,23 +13,52 @@ export default function VideosPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Video[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [sortBy, setSortBy] = useState<'newest' | 'popular' | 'trending'>('newest');
+  const [currentPage, setCurrentPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
 
-  // 動画データを取得
+  // 動画データとカテゴリを取得
   useEffect(() => {
-    const fetchVideos = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const videoData = await getVideos();
+        const [videoData, categoryData] = await Promise.all([
+          getVideos(20, 0, sortBy),
+          getCategories()
+        ]);
         setVideos(videoData);
+        setCategories(categoryData);
+        setHasMore(videoData.length === 20);
       } catch (error) {
-        console.error('Error fetching videos:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchVideos();
-  }, []);
+    fetchData();
+  }, [sortBy]);
+
+  // カテゴリフィルターが変更された時の処理
+  useEffect(() => {
+    if (selectedCategory) {
+      const fetchVideosByCategory = async () => {
+        try {
+          setLoading(true);
+          const videoData = await getVideos(20, 0, sortBy);
+          const filteredVideos = videoData.filter(video => video.category_id === selectedCategory);
+          setVideos(filteredVideos);
+        } catch (error) {
+          console.error('Error fetching videos by category:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchVideosByCategory();
+    }
+  }, [selectedCategory, sortBy]);
 
   // 検索処理
   const handleSearch = async (e: React.FormEvent) => {
@@ -53,6 +82,17 @@ export default function VideosPage() {
 
   // 表示する動画リストを決定
   const displayVideos = isSearching ? searchResults : videos;
+
+  // カテゴリフィルターをリセット
+  const handleCategoryReset = () => {
+    setSelectedCategory("");
+  };
+
+  // ソート変更
+  const handleSortChange = (newSortBy: 'newest' | 'popular' | 'trending') => {
+    setSortBy(newSortBy);
+    setCurrentPage(0);
+  };
 
   // 視聴回数をフォーマット
   const formatViewCount = (count: number): string => {
@@ -126,8 +166,9 @@ export default function VideosPage() {
           <p className="text-white/80">日本の伝統文化・技術を学べる動画を視聴できます</p>
         </div>
 
-        {/* 検索バー */}
-        <div className="mb-8">
+        {/* 検索・フィルター・ソート */}
+        <div className="mb-8 space-y-4">
+          {/* 検索バー */}
           <form onSubmit={handleSearch} className="relative max-w-md">
             <input
               type="text"
@@ -150,6 +191,58 @@ export default function VideosPage() {
               </svg>
             </button>
           </form>
+
+          {/* フィルター・ソート */}
+          <div className="flex flex-wrap gap-4 items-center">
+            {/* カテゴリフィルター */}
+            <div className="flex items-center space-x-2">
+              <label className="text-white font-medium">カテゴリ:</label>
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="px-3 py-2 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#b40808] focus:border-transparent outline-none"
+              >
+                <option value="">すべて</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+              {selectedCategory && (
+                <button
+                  onClick={handleCategoryReset}
+                  className="text-white hover:text-[#f5f0d8] text-sm"
+                >
+                  リセット
+                </button>
+              )}
+            </div>
+
+            {/* ソート */}
+            <div className="flex items-center space-x-2">
+              <label className="text-white font-medium">並び順:</label>
+              <div className="flex space-x-1">
+                {[
+                  { key: 'newest', label: '新着' },
+                  { key: 'popular', label: '人気' },
+                  { key: 'trending', label: 'トレンド' }
+                ].map((option) => (
+                  <button
+                    key={option.key}
+                    onClick={() => handleSortChange(option.key as any)}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      sortBy === option.key
+                        ? 'bg-[#b40808] text-white'
+                        : 'bg-white text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* ローディング状態 */}
@@ -223,11 +316,29 @@ export default function VideosPage() {
         )}
 
         {/* もっと見るボタン */}
-        <div className="text-center mt-8">
-          <button className="bg-[#f5f0d8] text-[#b40808] px-6 py-3 rounded-lg font-medium hover:bg-white transition-colors">
-            もっと見る
-          </button>
-        </div>
+        {!loading && !isSearching && hasMore && (
+          <div className="text-center mt-8">
+            <button 
+              onClick={async () => {
+                try {
+                  setLoading(true);
+                  const nextPage = currentPage + 1;
+                  const moreVideos = await getVideos(20, nextPage * 20, sortBy);
+                  setVideos(prev => [...prev, ...moreVideos]);
+                  setCurrentPage(nextPage);
+                  setHasMore(moreVideos.length === 20);
+                } catch (error) {
+                  console.error('Error loading more videos:', error);
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              className="bg-[#f5f0d8] text-[#b40808] px-6 py-3 rounded-lg font-medium hover:bg-white transition-colors"
+            >
+              もっと見る
+            </button>
+          </div>
+        )}
       </div>
     </main>
   );

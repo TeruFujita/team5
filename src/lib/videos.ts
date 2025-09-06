@@ -50,9 +50,32 @@ export interface Tag {
   name: string;
 }
 
+export interface Category {
+  id: string;
+  name: string;
+  description: string | null;
+  icon: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 // 動画一覧を取得
-export async function getVideos(limit: number = 20, offset: number = 0): Promise<Video[]> {
+export async function getVideos(limit: number = 20, offset: number = 0, sortBy: 'newest' | 'popular' | 'trending' = 'newest'): Promise<Video[]> {
   try {
+    let orderBy: any = { column: 'created_at', ascending: false };
+    
+    switch (sortBy) {
+      case 'popular':
+        orderBy = { column: 'view_count', ascending: false };
+        break;
+      case 'trending':
+        // 最近7日間のいいね数でソート（簡易版）
+        orderBy = { column: 'like_count', ascending: false };
+        break;
+      default:
+        orderBy = { column: 'created_at', ascending: false };
+    }
+
     const { data, error } = await supabase
       .from('videos')
       .select(`
@@ -61,7 +84,7 @@ export async function getVideos(limit: number = 20, offset: number = 0): Promise
         category:categories(id, name)
       `)
       .eq('is_published', true)
-      .order('created_at', { ascending: false })
+      .order(orderBy.column, { ascending: orderBy.ascending })
       .range(offset, offset + limit - 1);
 
     if (error) {
@@ -207,6 +230,75 @@ export async function getUserVideos(userId: string, limit: number = 20): Promise
     return data || [];
   } catch (error) {
     console.error('Error fetching user videos:', error);
+    return [];
+  }
+}
+
+// カテゴリ一覧を取得
+export async function getCategories(): Promise<Category[]> {
+  try {
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .order('name', { ascending: true });
+
+    if (error) {
+      throw error;
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    return [];
+  }
+}
+
+// 人気動画を取得（視聴回数順）
+export async function getPopularVideos(limit: number = 10): Promise<Video[]> {
+  try {
+    const { data, error } = await supabase
+      .from('videos')
+      .select(`
+        *,
+        user:users(id, name, avatar),
+        category:categories(id, name)
+      `)
+      .eq('is_published', true)
+      .order('view_count', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      throw error;
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching popular videos:', error);
+    return [];
+  }
+}
+
+// トレンド動画を取得（いいね数順）
+export async function getTrendingVideos(limit: number = 10): Promise<Video[]> {
+  try {
+    const { data, error } = await supabase
+      .from('videos')
+      .select(`
+        *,
+        user:users(id, name, avatar),
+        category:categories(id, name)
+      `)
+      .eq('is_published', true)
+      .order('like_count', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      throw error;
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching trending videos:', error);
     return [];
   }
 }
