@@ -35,12 +35,38 @@ export type Database = {
           updated_at?: string
         }
       }
+      profiles: {
+        Row: {
+          id: string
+          username: string
+          avatar_url: string | null
+          created_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          username: string
+          avatar_url?: string | null
+          created_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          username?: string
+          avatar_url?: string | null
+          created_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+      }
       videos: {
         Row: {
           id: string
           title: string
           description: string | null
-          thumbnail: string | null
+          thumbnail_url: string | null
           video_url: string
           duration: number | null
           view_count: number
@@ -55,7 +81,7 @@ export type Database = {
           id?: string
           title: string
           description?: string | null
-          thumbnail?: string | null
+          thumbnail_url?: string | null
           video_url: string
           duration?: number | null
           view_count?: number
@@ -70,7 +96,7 @@ export type Database = {
           id?: string
           title?: string
           description?: string | null
-          thumbnail?: string | null
+          thumbnail_url?: string | null
           video_url?: string
           duration?: number | null
           view_count?: number
@@ -80,6 +106,52 @@ export type Database = {
           updated_at?: string
           user_id?: string
           category_id?: string | null
+        }
+      }
+      comments: {
+        Row: {
+          id: string
+          text: string
+          created_at: string
+          updated_at: string
+          user_id: string
+          video_id: string
+        }
+        Insert: {
+          id?: string
+          text: string
+          created_at?: string
+          updated_at?: string
+          user_id: string
+          video_id: string
+        }
+        Update: {
+          id?: string
+          text?: string
+          created_at?: string
+          updated_at?: string
+          user_id?: string
+          video_id?: string
+        }
+      }
+      saves: {
+        Row: {
+          id: string
+          created_at: string
+          user_id: string
+          video_id: string
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          user_id: string
+          video_id: string
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          user_id?: string
+          video_id?: string
         }
       }
       categories: {

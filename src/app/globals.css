@@ -246,6 +246,7 @@ main {
   overflow-x: auto;
   padding: 0 20px;
   scroll-snap-type: x mandatory;
+  transition: transform 0.3s ease-in-out;
 }
 
 .card {
@@ -355,6 +356,7 @@ main {
   opacity: 0.5;
   display: inline-block;
   transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 .carousel-controls .dots .dot.current {
