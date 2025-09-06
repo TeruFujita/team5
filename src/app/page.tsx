@@ -2,11 +2,13 @@
 
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(2); // 真ん中のカード（インデックス2）を初期表示
   const totalSlides = 5;
   const cardsRef = useRef<HTMLDivElement>(null);
+  const { user, signOut } = useAuth();
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % totalSlides);
@@ -48,12 +50,28 @@ export default function Home() {
           <a href="/upload" className="text-gray-700 hover:text-[#b40808] font-medium py-2">
             動画投稿
           </a>
-          <a href="/login" className="text-gray-700 hover:text-[#b40808] font-medium py-2">
-            ログイン
-          </a>
-          <a href="/signup" className="bg-[#b40808] text-white px-4 py-2 rounded-lg hover:bg-[#a00808] transition-colors font-medium">
-            サインアップ
-          </a>
+          {user ? (
+            <>
+              <span className="text-gray-700 font-medium py-2">
+                こんにちは、{user.user_metadata?.name || user.email}さん
+              </span>
+              <button 
+                onClick={signOut}
+                className="bg-[#b40808] text-white px-4 py-2 rounded-lg hover:bg-[#a00808] transition-colors font-medium"
+              >
+                ログアウト
+              </button>
+            </>
+          ) : (
+            <>
+              <a href="/login" className="text-gray-700 hover:text-[#b40808] font-medium py-2">
+                ログイン
+              </a>
+              <a href="/signup" className="bg-[#b40808] text-white px-4 py-2 rounded-lg hover:bg-[#a00808] transition-colors font-medium">
+                サインアップ
+              </a>
+            </>
+          )}
         </nav>
       </header>
 

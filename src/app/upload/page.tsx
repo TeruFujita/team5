@@ -3,11 +3,39 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function UploadPage() {
+  const { user, signOut } = useAuth();
   const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
   const [selectedThumbnail, setSelectedThumbnail] = useState<File | null>(null);
   const [uploadError, setUploadError] = useState<string>("");
+
+  // 認証チェック
+  if (!user) {
+    return (
+      <main className="min-h-screen bg-[#a70808] flex items-center justify-center">
+        <div className="bg-[#f5f0d8] rounded-lg p-8 w-full max-w-md text-center">
+          <h1 className="text-2xl font-bold text-[#b40808] mb-4">ログインが必要です</h1>
+          <p className="text-gray-600 mb-6">動画を投稿するにはログインしてください</p>
+          <div className="space-y-4">
+            <Link 
+              href="/login" 
+              className="block w-full bg-[#b40808] text-white py-3 rounded-lg font-medium hover:bg-[#a00808] transition-colors"
+            >
+              ログイン
+            </Link>
+            <Link 
+              href="/signup" 
+              className="block w-full border border-[#b40808] text-[#b40808] py-3 rounded-lg font-medium hover:bg-[#b40808] hover:text-white transition-colors"
+            >
+              新規登録
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -75,12 +103,28 @@ export default function UploadPage() {
               <Link href="/upload" className="text-[#b40808] font-medium py-2">
                 動画投稿
               </Link>
-              <Link href="/login" className="text-gray-700 hover:text-[#b40808] font-medium py-2">
-                ログイン
-              </Link>
-              <Link href="/signup" className="bg-[#b40808] text-white px-4 py-2 rounded-lg hover:bg-[#a00808] transition-colors font-medium">
-                サインアップ
-              </Link>
+              {user ? (
+                <>
+                  <span className="text-gray-700 font-medium py-2">
+                    こんにちは、{user.user_metadata?.name || user.email}さん
+                  </span>
+                  <button 
+                    onClick={signOut}
+                    className="bg-[#b40808] text-white px-4 py-2 rounded-lg hover:bg-[#a00808] transition-colors font-medium"
+                  >
+                    ログアウト
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link href="/login" className="text-gray-700 hover:text-[#b40808] font-medium py-2">
+                    ログイン
+                  </Link>
+                  <Link href="/signup" className="bg-[#b40808] text-white px-4 py-2 rounded-lg hover:bg-[#a00808] transition-colors font-medium">
+                    サインアップ
+                  </Link>
+                </>
+              )}
             </nav>
         </div>
       </header>

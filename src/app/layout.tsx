@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Eczar } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 const eczar = Eczar({
   variable: "--font-eczar",
@@ -22,7 +23,9 @@ export default function RootLayout({
       <body
         className={`${eczar.variable} antialiased`}
       >
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

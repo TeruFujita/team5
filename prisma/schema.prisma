@@ -24,6 +24,7 @@ model User {
   comments  Comment[]
   likes     Like[]
   saves     Save[]
+  profile   Profile?
 
   @@map("users")
 }
@@ -41,9 +42,6 @@ model Profile {
 
   // リレーション
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  videos     Video[]
-  comments   Comment[]
-  saves      Save[]
 
   @@map("profiles")
 }
