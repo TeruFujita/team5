@@ -26,7 +26,10 @@ export async function toggleLike(videoId: string, userId: string): Promise<{ suc
       if (deleteError) throw deleteError;
 
       // 動画のいいね数を減らす
-      await supabase.rpc('decrement_like_count', { video_id: videoId });
+      await supabase
+        .from('videos')
+        .update({ like_count: supabase.sql`GREATEST(like_count - 1, 0)` })
+        .eq('id', videoId);
 
       return { success: true, isLiked: false };
     } else {
@@ -38,7 +41,10 @@ export async function toggleLike(videoId: string, userId: string): Promise<{ suc
       if (insertError) throw insertError;
 
       // 動画のいいね数を増やす
-      await supabase.rpc('increment_like_count', { video_id: videoId });
+      await supabase
+        .from('videos')
+        .update({ like_count: supabase.sql`like_count + 1` })
+        .eq('id', videoId);
 
       return { success: true, isLiked: true };
     }

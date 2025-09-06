@@ -120,9 +120,10 @@ export async function getVideoById(id: string): Promise<VideoWithDetails | null>
 // 動画の視聴回数を増加
 export async function incrementViewCount(videoId: string): Promise<void> {
   try {
-    const { error } = await supabase.rpc('increment_view_count', {
-      video_id: videoId
-    });
+    const { error } = await supabase
+      .from('videos')
+      .update({ view_count: supabase.sql`view_count + 1` })
+      .eq('id', videoId);
 
     if (error) {
       console.error('Error incrementing view count:', error);

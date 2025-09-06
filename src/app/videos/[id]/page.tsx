@@ -87,25 +87,59 @@ export default function VideoDetailPage() {
     );
   }
 
-  const handleLike = () => {
-    setIsLiked(!isLiked);
+  const handleLike = async () => {
+    if (!user || !video) return;
+    
+    setIsInteracting(true);
+    try {
+      const result = await toggleLike(video.id, user.id);
+      if (result.success) {
+        setIsLiked(result.isLiked);
+        // 動画のいいね数を更新
+        setVideo(prev => prev ? { ...prev, like_count: prev.like_count + (result.isLiked ? 1 : -1) } : null);
+      }
+    } catch (error) {
+      console.error('Error toggling like:', error);
+    } finally {
+      setIsInteracting(false);
+    }
   };
 
-  const handleSave = () => {
-    setIsSaved(!isSaved);
+  const handleSave = async () => {
+    if (!user || !video) return;
+    
+    setIsInteracting(true);
+    try {
+      const result = await toggleSave(video.id, user.id);
+      if (result.success) {
+        setIsSaved(result.isSaved);
+      }
+    } catch (error) {
+      console.error('Error toggling save:', error);
+    } finally {
+      setIsInteracting(false);
+    }
   };
 
-  const handleCommentSubmit = (e: React.FormEvent) => {
+  const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (comment.trim()) {
-      const newComment = {
-        id: comments.length + 1,
-        user: "あなた",
-        text: comment,
-        time: "今"
-      };
-      setComments([newComment, ...comments]);
-      setComment("");
+    if (!user || !video || !comment.trim()) return;
+    
+    setIsInteracting(true);
+    try {
+      const result = await addComment(video.id, user.id, comment);
+      if (result.success) {
+        setComment("");
+        // 動画データを再取得してコメントを更新
+        const updatedVideo = await getVideoById(videoId);
+        if (updatedVideo) {
+          setVideo(updatedVideo);
+        }
+      }
+    } catch (error) {
+      console.error('Error adding comment:', error);
+    } finally {
+      setIsInteracting(false);
     }
   };
 
@@ -182,11 +216,12 @@ export default function VideoDetailPage() {
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={handleLike}
+                      disabled={isInteracting || !user}
                       className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
                         isLiked 
                           ? 'bg-[#b40808] text-white' 
                           : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                      }`}
+                      } ${isInteracting || !user ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
@@ -195,11 +230,12 @@ export default function VideoDetailPage() {
                     </button>
                     <button
                       onClick={handleSave}
+                      disabled={isInteracting || !user}
                       className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
                         isSaved 
                           ? 'bg-[#b40808] text-white' 
                           : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                      }`}
+                      } ${isInteracting || !user ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
@@ -285,9 +321,10 @@ export default function VideoDetailPage() {
                     />
                     <button
                       type="submit"
-                      className="bg-[#b40808] text-white px-4 py-2 rounded-lg hover:bg-[#a00808] transition-colors"
+                      disabled={isInteracting || !comment.trim()}
+                      className="bg-[#b40808] text-white px-4 py-2 rounded-lg hover:bg-[#a00808] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      投稿
+                      {isInteracting ? "投稿中..." : "投稿"}
                     </button>
                   </div>
                 </form>
